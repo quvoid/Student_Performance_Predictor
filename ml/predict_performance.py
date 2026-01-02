@@ -1,6 +1,7 @@
 import joblib
 import numpy as np
 import pandas as pd
+import os
 
 def predict_student_performance(student_data):
     """
@@ -19,9 +20,10 @@ def predict_student_performance(student_data):
     # Load Model
     # Note: In a production app, you'd load this once at startup
     try:
-        model = joblib.load("student_performance_model.pkl")
+        model_path = os.path.join(os.path.dirname(__file__), "../models/student_performance_model.pkl")
+        model = joblib.load(model_path)
     except FileNotFoundError:
-        return "Error: Model file 'student_performance_model.pkl' not found. Please train the model first."
+        return f"Error: Model file '{model_path}' not found. Please train the model first."
 
     # Manual Encoding Mappings (Must match training LabelEncoder)
     gender_map = {'Female': 0, 'Male': 1}

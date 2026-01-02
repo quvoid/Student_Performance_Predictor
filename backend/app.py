@@ -1,17 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import joblib
 import numpy as np
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Load the trained model
 try:
-    model = joblib.load("student_performance_model.pkl")
+    model_path = os.path.join(os.path.dirname(__file__), '../models/student_performance_model.pkl')
+    model = joblib.load(model_path)
     print("Model loaded successfully.")
 except FileNotFoundError:
-    print("Error: 'student_performance_model.pkl' not found.")
+    print(f"Error: Model not found at {model_path}")
     model = None
 
 # Mappings (Must match training/inference logic)
@@ -20,8 +22,8 @@ PARENTAL_MAP = {'High': 0, 'Low': 1, 'Medium': 2}
 ONLINE_MAP = {False: 0, True: 1, 'False': 0, 'True': 1}
 
 @app.route('/', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'online', 'message': 'Student Performance Prediction API'})
+def home():
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():

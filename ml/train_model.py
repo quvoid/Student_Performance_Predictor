@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from preprocess_data import load_and_preprocess
 import numpy as np
+import os
 
 def train_and_eval():
     # 1. Load Processed Data
@@ -41,7 +42,7 @@ def train_and_eval():
     print(classification_report(y_test_class, y_pred, target_names=['Average/Low', 'High']))
 
     # 7. Save Model
-    model_filename = "student_performance_model.pkl"
+    model_filename = os.path.join(os.path.dirname(__file__), "../models/student_performance_model.pkl")
     joblib.dump(model, model_filename)
     print(f"Model saved to {model_filename}")
 

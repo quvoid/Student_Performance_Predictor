@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Student Performance Predictor</h1>
+        <p class="text-gray-500 mb-8 text-center">Enter student details to predict performance level.</p>
+
+        <form id="predictionForm" class="space-y-6">
+            
+            <!-- Grid for inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Gender -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                    <select name="Gender" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+
+                <!-- Parental Support -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Parental Support</label>
+                    <select name="ParentalSupport" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <!-- Attendance Rate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attendance Rate (%)</label>
+                    <input type="number" name="AttendanceRate" min="0" max="100" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 85" required>
+                </div>
+
+                <!-- Study Hours -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Study Hours / Week</label>
+                    <input type="number" name="StudyHoursPerWeek" min="0" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 20" required>
+                </div>
+
+                <!-- Previous Grade -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Previous Grade (0-100)</label>
+                    <input type="number" name="PreviousGrade" min="0" max="100" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 75" required>
+                </div>
+
+                <!-- Extracurricular Activities -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Extracurricular Activities</label>
+                    <input type="number" name="ExtracurricularActivities" min="0" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 1" required>
+                </div>
+
+                <!-- Online Classes -->
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Online Classes Taken</label>
+                    <select name="Online Classes Taken" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">
+                Predict Performance
+            </button>
+        </form>
+
+        <!-- Result Section -->
+        <div id="result" class="hidden mt-8 p-6 rounded-lg text-center">
+            <h2 id="predictionText" class="text-2xl font-bold mb-2"></h2>
+            <p id="probabilityText" class="text-gray-600"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = {};
+            
+            // Convert FormData to JSON object, handling boolean conversion
+            formData.forEach((value, key) => {
+                if (key === 'Online Classes Taken') {
+                    data[key] = value === 'true';
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            const resultDiv = document.getElementById('result');
+            const submitBtn = form.querySelector('button');
+            const originalBtnText = submitBtn.innerText;
+
+            submitBtn.innerText = "Predicting...";
+            submitBtn.disabled = true;
+            resultDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const prediction = result.prediction;
+                    const prob = (result.probability * 100).toFixed(1);
+
+                    const predText = document.getElementById('predictionText');
+                    const probText = document.getElementById('probabilityText');
+
+                    predText.innerText = prediction;
+                    probText.innerText = `Probability: ${prob}%`;
+
+                    // Styling based on result
+                    resultDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800');
+                    if (prediction.includes("High")) {
+                        resultDiv.classList.add('bg-green-100', 'text-green-800');
+                    } else {
+                        resultDiv.classList.add('bg-yellow-100', 'text-yellow-800');
+                    }
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to connect to the server.');
+            } finally {
+                submitBtn.innerText = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
